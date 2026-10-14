@@ -1,4 +1,4 @@
-# 📡 WiFi Payment & Employee Attendance System (v2.0 Monolith)
+# 📡 WiFi Payment & Attendance System (v2.0 Monolith)
 
 ![PHP](https://img.shields.io/badge/PHP-8.3+-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
