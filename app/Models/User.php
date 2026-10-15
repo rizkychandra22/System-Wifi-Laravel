@@ -39,31 +39,35 @@ class User extends Authenticatable
         ];
     }
 
-    // Role checks
-    public function isAdmin(): bool
+    // Spatie-style role checks
+    public function hasRole(string|array $roles): bool
     {
-        return $this->role === "admin";
-    }
+        if (is_array($roles)) {
+            return in_array($this->role, $roles, true);
+        }
 
-    public function isEmployee(): bool
-    {
-        return $this->role === "employee";
-    }
-
-    public function isCustomer(): bool
-    {
-        return $this->role === "customer";
-    }
-
-    public function hasRole(string $role): bool
-    {
-        return $this->role === $role;
+        return $this->role === $roles;
     }
 
     public function hasAnyRole(array|string ...$roles): bool
     {
         $rolesList = is_array($roles[0] ?? null) ? $roles[0] : $roles;
         return in_array($this->role, $rolesList, true);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole("admin");
+    }
+
+    public function isEmployee(): bool
+    {
+        return $this->hasRole("employee");
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->hasRole("customer");
     }
 
     // Relationships

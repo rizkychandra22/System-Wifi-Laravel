@@ -13,14 +13,14 @@
 
 ## 🚀 Daftar Task Migrasi (Status Pengerjaan)
 
-|  No   | Modul / Fase Migrasi                               | Dokumen Markdown (`tasks/`)                                                        | Status                  |
-| :---: | :------------------------------------------------- | :--------------------------------------------------------------------------------- | :---------------------- |
-| **0** | **Master Blueprint Migrasi v2.0**                  | [`plan-migration-v2-wifi-system.md`](./tasks/plan-migration-v2-wifi-system.md)     | **In Progress**         |
-| **1** | **Fase 1: Database, Migrations & Eloquent Models** | Terangkum di Blueprint v2.0                                                        | **Selesai (Completed)** |
-| **2** | **Fase 2A: Middleware Akses & Shared Data Global** | [`plan-middleware-and-shared-data.md`](./tasks/plan-middleware-and-shared-data.md) | **Selesai**             |
-| **3** | **Fase 2B: Services & Controllers Logika Bisnis**  | Terangkum di Blueprint v2.0                                                        | **Siap Dikerjakan**     |
-| **4** | **Fase 3: Scheduler Presensi & Auto Checkout**     | Terangkum di Blueprint v2.0                                                        | Menunggu Fase 2B        |
-| **5** | **Fase 4: Migrasi Frontend UI (Inertia React)**    | Terangkum di Blueprint v2.0                                                        | Menunggu Fase 3         |
+|  No   | Modul / Fase Migrasi                               | Dokumen Markdown (`tasks/`)                                                                        | Status                  |
+| :---: | :------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :---------------------- |
+| **0** | **Master Blueprint Migrasi v2.0**                  | [`plan-migration-v2-wifi-system.md`](./tasks/plan-migration-v2-wifi-system.md)                     | **In Progress**         |
+| **1** | **Fase 1: Database, Migrations & Eloquent Models** | Terangkum di Blueprint v2.0                                                                        | **Selesai (Completed)** |
+| **2** | **Fase 2A: Middleware Akses & Shared Data Global** | [`plan-middleware-and-shared-data.md`](./tasks/plan-middleware-and-shared-data.md)                 | **Selesai**             |
+| **3** | **Fase 2B: Services & Controllers Logika Bisnis**  | [`plan-controllers-and-services-migration.md`](./tasks/plan-controllers-and-services-migration.md) | **Selesai**             |
+| **4** | **Fase 3: Scheduler Presensi & Auto Checkout**     | Terangkum di Blueprint v2.0                                                                        | **Siap Dikerjakan**     |
+| **5** | **Fase 4: Migrasi Frontend UI (Inertia React)**    | Terangkum di Blueprint v2.0                                                                        | Menunggu Fase 3         |
 
 ---
 
@@ -53,4 +53,22 @@
 - [x] Entry point Inertia React: `resources/js/app.tsx` & halaman verifikasi `resources/js/Pages/Welcome.tsx`.
 - [x] Konfigurasi Linter Cepat berbasis Rust: **Oxlint** (`.oxlintrc.json`, `npm run lint`).
 - [x] Konfigurasi Formatter: **Prettier** (`.prettierrc`, `.prettierignore`, `.editorconfig` dengan 2 spasi untuk JS/TS/React dan 4 spasi untuk PHP).
-- [x] Automated Feature Testing: `tests/Feature/MiddlewareAndInertiaTest.php` (7 tests, 23 assertions passed 100%).
+
+---
+
+## 📌 Rincian Progress Fase 2B (Services & Controllers Logika Bisnis)
+
+- [x] Implementasi 8 Services (Clean Architecture):
+  - `App\Services\AuthService`: Login multi-role, device lockout 24 jam untuk employee, rate limit 5x salah, profil & password.
+  - `App\Services\UserService`: CRUD pengguna, proteksi scope employee hanya melihat customer yang didaftarkannya, reset kunci perangkat (IP/device_id).
+  - `App\Services\WifiPackageService`: CRUD paket WiFi dengan proteksi penghapusan jika masih ada langganan aktif.
+  - `App\Services\SubscriptionService`: Manajemen langganan paket pelanggan dengan auto tanggal jatuh tempo.
+  - `App\Services\PaymentService`: Transaksi pembayaran/invoice dengan proteksi lock 14 hari, kalkulasi PPN 11%, dan auto-advance jatuh tempo +1 bulan.
+  - `App\Services\AttendanceService`: Presensi karyawan dengan validasi geofencing Haversine (<=100m dari kantor), grade kedisiplinan, clock in/out, dan izin.
+  - `App\Services\OvertimeService`: Pencatatan lembur dengan kalkulasi upah proporsional Rp 5.000 / jam.
+  - `App\Services\AllowanceService`: Tunjangan & bonus karyawan dengan distribusi target Personal dan Global.
+- [x] Implementasi 9 Controllers:
+  - `AuthController`, `ProfileController`, `UserController`, `WifiPackageController`, `SubscriptionController`, `PaymentController`, `AttendanceController`, `OvertimeController`, `AllowanceController`.
+  - Pengecekan peran menggunakan Spatie-style `hasRole(...)` dan `hasAnyRole(...)`.
+- [x] Pendaftaran 59 Rute di `routes/web.php` terintegrasi dengan middleware `access`.
+- [x] Pembersihan unit test awal sesuai instruksi user.
