@@ -11,12 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Dynamic Ziggy Routes (No manual ziggy:generate needed) -->
     @routes
-
-    <!-- Vite React Scripts -->
     @viteReactRefresh
-    @vite(['resources/js/app.tsx'])
+    @vite(['resources/js/App.tsx'])
     @inertiaHead
 </head>
 <body class="font-sans antialiased bg-slate-950 text-slate-100 min-h-screen">

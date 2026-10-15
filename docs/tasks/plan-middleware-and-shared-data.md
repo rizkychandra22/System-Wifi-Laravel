@@ -4,7 +4,7 @@
 > **Tanggal:** 15 Oktober 2026  
 > **Target:** `System-Wifi-Laravel`
 > **Penanggung Jawab:** Lead Developer  
-> **Status:** Selesai (*Completed & Tested*)
+> **Status:** Selesai (_Completed & Tested_)
 
 ---
 

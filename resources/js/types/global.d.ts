@@ -1,4 +1,6 @@
-import { PageProps as InertiaPageProps } from "./index";
+/// <reference types="vite/client" />
+
+import { PageProps as InertiaPageProps } from "./Index";
 import { route as ziggyRoute } from "ziggy-js";
 
 declare global {

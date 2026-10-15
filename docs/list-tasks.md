@@ -54,4 +54,3 @@
 - [x] Konfigurasi Linter Cepat berbasis Rust: **Oxlint** (`.oxlintrc.json`, `npm run lint`).
 - [x] Konfigurasi Formatter: **Prettier** (`.prettierrc`, `.prettierignore`, `.editorconfig` dengan 2 spasi untuk JS/TS/React dan 4 spasi untuk PHP).
 - [x] Automated Feature Testing: `tests/Feature/MiddlewareAndInertiaTest.php` (7 tests, 23 assertions passed 100%).
-
