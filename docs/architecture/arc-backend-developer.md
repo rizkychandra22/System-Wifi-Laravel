@@ -14,11 +14,11 @@ Pola ini diadopsi dari standar project `Ukm-Lises` untuk memastikan kode backend
 Request  --->  Controller  --->  Service  --->  Model / DB  --->  Response / Inertia
 ```
 
-| Layer | Tanggung Jawab | Dilarang |
-|---|---|---|
+| Layer          | Tanggung Jawab                                                                           | Dilarang                                                     |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | **Controller** | Validasi input (`$request->validate()`), panggil method Service, return Inertia/Redirect | Menulis query database mentah, menulis logika bisnis panjang |
-| **Service** | Seluruh logika bisnis (kalkulasi billing, presensi GPS, device lock), transaksi DB | Mengakses global helper `request()` secara langsung |
-| **Model** | Definisi `$fillable`, `$casts`, relasi Eloquent (`hasMany`, `belongsTo`) | Menampung logika bisnis berat |
+| **Service**    | Seluruh logika bisnis (kalkulasi billing, presensi GPS, device lock), transaksi DB       | Mengakses global helper `request()` secara langsung          |
+| **Model**      | Definisi `$fillable`, `$casts`, relasi Eloquent (`hasMany`, `belongsTo`)                 | Menampung logika bisnis berat                                |
 
 ---
 

@@ -11,32 +11,32 @@ class Allowance extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'allowances';
+    protected $table = "allowances";
 
     protected $fillable = [
-        'title',
-        'description',
-        'amount',
-        'month',
-        'target_type',
-        'user_id',
-        'created_by_id',
+        "title",
+        "description",
+        "amount",
+        "month",
+        "target_type",
+        "user_id",
+        "created_by_id",
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+            "amount" => "decimal:2",
         ];
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, "user_id");
     }
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_id');
+        return $this->belongsTo(User::class, "created_by_id");
     }
 }

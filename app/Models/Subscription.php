@@ -10,37 +10,37 @@ class Subscription extends Model
 {
     use HasFactory;
 
-    protected $table = 'subscriptions';
+    protected $table = "subscriptions";
 
     protected $fillable = [
-        'customer_id',
-        'wifi_package_id',
-        'billing_day',
-        'next_due_date',
-        'status',
-        'created_by_id',
+        "customer_id",
+        "wifi_package_id",
+        "billing_day",
+        "next_due_date",
+        "status",
+        "created_by_id",
     ];
 
     protected function casts(): array
     {
         return [
-            'billing_day' => 'integer',
-            'next_due_date' => 'datetime',
+            "billing_day" => "integer",
+            "next_due_date" => "datetime",
         ];
     }
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(User::class, "customer_id");
     }
 
     public function wifiPackage(): BelongsTo
     {
-        return $this->belongsTo(WifiPackage::class, 'wifi_package_id');
+        return $this->belongsTo(WifiPackage::class, "wifi_package_id");
     }
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_id');
+        return $this->belongsTo(User::class, "created_by_id");
     }
 }

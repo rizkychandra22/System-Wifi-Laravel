@@ -1,0 +1,23 @@
+{
+  "printWidth": 100,
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "endOfLine": "auto",
+  "plugins": ["@prettier/plugin-php"],
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.css"],
+      "options": {
+        "tabWidth": 2
+      }
+    },
+    {
+      "files": ["*.php"],
+      "options": {
+        "tabWidth": 4
+      }
+    }
+  ]
+}

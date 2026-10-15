@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript"],
+  "rules": {
+    "no-unused-vars": "warn",
+    "react/jsx-key": "error",
+    "react/jsx-no-target-blank": "warn",
+    "typescript/no-explicit-any": "off"
+  }
+}

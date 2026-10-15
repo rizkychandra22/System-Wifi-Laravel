@@ -13,16 +13,16 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminPhone = env('ADMIN_PHONE', '081234567890');
-        $adminPassword = env('ADMIN_PASSWORD', 'password');
+        $adminPhone = env("ADMIN_PHONE", "081234567890");
+        $adminPassword = env("ADMIN_PASSWORD", "password");
 
         User::firstOrCreate(
-            ['phone' => $adminPhone],
+            ["phone" => $adminPhone],
             [
-                'name' => 'Admin NetVerse',
-                'role' => 'admin',
-                'password' => Hash::make($adminPassword),
-            ]
+                "name" => "Admin NetVerse",
+                "role" => "admin",
+                "password" => Hash::make($adminPassword),
+            ],
         );
     }
 }
