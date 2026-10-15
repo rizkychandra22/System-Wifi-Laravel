@@ -2,31 +2,95 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $table = 'users';
+
+    protected $fillable = [
+        'name',
+        'phone',
+        'role',
+        'password',
+        'failed_login_attempts',
+        'locked_until',
+        'address',
+        'device_id',
+        'registered_by_id',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'locked_until' => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
+    }
+
+    // Role checks
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isEmployee(): bool
+    {
+        return $this->role === 'employee';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    // Relationships
+    public function registeredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'registered_by_id');
+    }
+
+    public function registeredUsers(): HasMany
+    {
+        return $this->hasMany(User::class, 'registered_by_id');
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class, 'customer_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'customer_id');
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'user_id');
+    }
+
+    public function overtimes(): HasMany
+    {
+        return $this->hasMany(Overtime::class, 'user_id');
+    }
+
+    public function allowances(): HasMany
+    {
+        return $this->hasMany(Allowance::class, 'user_id');
     }
 }
