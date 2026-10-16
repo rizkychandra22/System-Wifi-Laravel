@@ -1,6 +1,6 @@
 import React from "react";
 import { Head } from "@inertiajs/react";
-import { PageProps } from "@/Types";
+import { PageProps } from "@/Global.d";
 
 interface WelcomeProps extends PageProps {
   title?: string;
