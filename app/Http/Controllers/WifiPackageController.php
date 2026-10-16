@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\WifiPackageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,7 +16,7 @@ class WifiPackageController extends Controller
     public function __construct(protected WifiPackageService $wifiPackageService) {}
 
     /**
-     * Menampilkan daftar paket WiFi.
+     * Menampilkan daftar paket WiFi — semua role dapat melihat.
      */
     public function index(Request $request): Response|JsonResponse
     {
@@ -30,10 +32,16 @@ class WifiPackageController extends Controller
     }
 
     /**
-     * Membuat paket WiFi baru (Admin only).
+     * Membuat paket WiFi baru — Admin only.
      */
     public function store(Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat menambah paket WiFi.");
+        }
+
         $validated = $request->validate([
             "name" => ["required", "string", "max:255"],
             "price" => ["required", "numeric", "min:0"],
@@ -55,10 +63,16 @@ class WifiPackageController extends Controller
     }
 
     /**
-     * Memperbarui informasi paket WiFi.
+     * Memperbarui informasi paket WiFi — Admin only.
      */
     public function update(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat mengubah paket WiFi.");
+        }
+
         $validated = $request->validate([
             "name" => ["nullable", "string", "max:255"],
             "price" => ["nullable", "numeric", "min:0"],
@@ -77,10 +91,16 @@ class WifiPackageController extends Controller
     }
 
     /**
-     * Menghapus paket WiFi.
+     * Menghapus paket WiFi — Admin only.
      */
     public function destroy(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat menghapus paket WiFi.");
+        }
+
         $this->wifiPackageService->delete($id);
 
         if ($request->wantsJson()) {

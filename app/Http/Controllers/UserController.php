@@ -109,6 +109,12 @@ class UserController extends Controller
      */
     public function destroy(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat menghapus pengguna.");
+        }
+
         $this->userService->deleteUser($id);
 
         if ($request->wantsJson()) {
@@ -123,12 +129,18 @@ class UserController extends Controller
      */
     public function resetDevice(int $id, Request $request): JsonResponse|RedirectResponse
     {
-        $user = $this->userService->resetUserDevice($id);
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat me-reset kunci perangkat.");
+        }
+
+        $resetUser = $this->userService->resetUserDevice($id);
 
         if ($request->wantsJson()) {
             return response()->json([
                 "message" => "Kunci perangkat pengguna berhasil di-reset.",
-                "user" => $user,
+                "user" => $resetUser,
             ]);
         }
 

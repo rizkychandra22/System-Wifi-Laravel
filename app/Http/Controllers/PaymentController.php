@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,10 +16,27 @@ class PaymentController extends Controller
     public function __construct(protected PaymentService $paymentService) {}
 
     /**
-     * Menampilkan daftar semua transaksi pembayaran / invoice.
+     * Menampilkan daftar pembayaran sesuai role.
+     * Admin & Employee → semua transaksi.
+     * Customer         → riwayat milik sendiri.
      */
     public function index(Request $request): Response|JsonResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user?->hasRole("customer")) {
+            $payments = $this->paymentService->getByCustomerId($user->id);
+
+            if ($request->wantsJson()) {
+                return response()->json($payments);
+            }
+
+            return Inertia::render("Customer/PaymentHistory", [
+                "payments" => $payments,
+            ]);
+        }
+
         $payments = $this->paymentService->getAll();
 
         if ($request->wantsJson()) {
@@ -26,22 +44,6 @@ class PaymentController extends Controller
         }
 
         return Inertia::render("Admin/Payments/Index", [
-            "payments" => $payments,
-        ]);
-    }
-
-    /**
-     * Menampilkan riwayat pembayaran milik pelanggan tertentu.
-     */
-    public function history(int $customerId, Request $request): Response|JsonResponse
-    {
-        $payments = $this->paymentService->getByCustomerId($customerId);
-
-        if ($request->wantsJson()) {
-            return response()->json($payments);
-        }
-
-        return Inertia::render("Customer/PaymentHistory", [
             "payments" => $payments,
         ]);
     }
@@ -63,7 +65,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Mencatat transaksi pembayaran baru (dengan validasi lock 14 hari).
+     * Mencatat transaksi pembayaran baru — Admin & Employee only.
      */
     public function store(Request $request): JsonResponse|RedirectResponse
     {
@@ -95,10 +97,16 @@ class PaymentController extends Controller
     }
 
     /**
-     * Memperbarui metode atau status pembayaran.
+     * Memperbarui metode atau status pembayaran — Admin only.
      */
     public function update(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat mengubah data pembayaran.");
+        }
+
         $validated = $request->validate([
             "payment_method" => ["nullable", "string"],
             "status" => ["nullable", "string", "in:paid,pending,cancelled"],
@@ -117,10 +125,16 @@ class PaymentController extends Controller
     }
 
     /**
-     * Menghapus invoice pembayaran (Admin only).
+     * Menghapus invoice pembayaran — Admin only.
      */
     public function destroy(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat menghapus data pembayaran.");
+        }
+
         $this->paymentService->deletePayment($id);
 
         if ($request->wantsJson()) {

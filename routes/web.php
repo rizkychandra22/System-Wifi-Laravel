@@ -3,6 +3,7 @@
 use App\Http\Controllers\AllowanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OvertimeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -10,14 +11,11 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WifiPackageController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // ==========================================
 // RUTE PUBLIK (Authentication & Information)
 // ==========================================
-Route::get("/", function () {
-    return redirect()->route("login");
-})->name("home");
+Route::get("/", fn() => redirect()->route("login"))->name("home");
 
 Route::get("/login", [AuthController::class, "showLogin"])->name("login");
 Route::post("/login", [AuthController::class, "login"])->name("login.post");
@@ -25,51 +23,85 @@ Route::post("/logout", [AuthController::class, "logout"])->name("logout");
 Route::get("/admin-contact", [AuthController::class, "adminContact"])->name("admin.contact");
 
 // ==========================================
-// RUTE TERAUTENTIKASI DENGAN MIDDLEWARE ACCESS
+// RUTE TERAUTENTIKASI — Semua Role (URL Unified)
 // ==========================================
 Route::middleware(["access:admin,employee,customer"])->group(function () {
-    // Pengaturan Profil & Ganti Password
+    // Dashboard — semua role, tampilan dibedakan di frontend berdasarkan role
+    Route::get("/dashboard", [DashboardController::class, "index"])->name("dashboard");
+
+    // Profil & Ganti Password
     Route::put("/profile", [ProfileController::class, "update"])->name("profile.update");
     Route::put("/profile/password", [ProfileController::class, "updatePassword"])->name(
         "profile.password",
     );
 
-    // Customer Protected Routes
-    Route::prefix("customer")
-        ->name("customer.")
-        ->group(function () {
-            Route::get("/subscription", [SubscriptionController::class, "show"])->name(
-                "subscription",
-            );
-            Route::get("/payments", [PaymentController::class, "history"])->name("payments");
-        });
-
-    // Employee & Admin Shared Resource Management
+    // Pengguna — Admin & Employee (internal: employee hanya lihat pelanggan milik sendiri)
     Route::middleware(["access:admin,employee"])->group(function () {
-        Route::resource("users", UserController::class)->only(["index", "store", "show", "update"]);
-        Route::resource("subscriptions", SubscriptionController::class)->only([
-            "index",
-            "store",
-            "show",
-        ]);
-        Route::resource("payments", PaymentController::class)->only([
-            "index",
-            "store",
-            "show",
-            "update",
-        ]);
-        Route::resource("overtimes", OvertimeController::class);
-        Route::resource("allowances", AllowanceController::class);
+        Route::get("/users", [UserController::class, "index"])->name("users.index");
+        Route::post("/users", [UserController::class, "store"])->name("users.store");
+        Route::get("/users/{id}", [UserController::class, "show"])->name("users.show");
+        Route::put("/users/{id}", [UserController::class, "update"])->name("users.update");
+        // Admin only — diproteksi di dalam controller
+        Route::delete("/users/{id}", [UserController::class, "destroy"])->name("users.destroy");
+        Route::put("/users/{id}/reset-device", [UserController::class, "resetDevice"])->name(
+            "users.resetDevice",
+        );
     });
 
-    // Employee Attendance Routes
-    Route::middleware(["access:employee"])
-        ->prefix("employee")
-        ->name("employee.")
-        ->group(function () {
-            Route::get("/attendance", [AttendanceController::class, "employeePage"])->name(
-                "attendance",
-            );
+    // Langganan — Admin & Employee + Customer (internal: customer lihat milik sendiri)
+    Route::get("/subscriptions", [SubscriptionController::class, "index"])->name(
+        "subscriptions.index",
+    );
+    Route::middleware(["access:admin,employee"])->group(function () {
+        Route::post("/subscriptions", [SubscriptionController::class, "store"])->name(
+            "subscriptions.store",
+        );
+        Route::get("/subscriptions/{id}", [SubscriptionController::class, "show"])->name(
+            "subscriptions.show",
+        );
+        // Admin only — diproteksi di dalam controller
+        Route::delete("/subscriptions/{id}", [SubscriptionController::class, "destroy"])->name(
+            "subscriptions.destroy",
+        );
+    });
+
+    // Pembayaran — Admin & Employee + Customer (internal: customer lihat milik sendiri)
+    Route::get("/payments", [PaymentController::class, "index"])->name("payments.index");
+    Route::middleware(["access:admin,employee"])->group(function () {
+        Route::post("/payments", [PaymentController::class, "store"])->name("payments.store");
+        Route::get("/payments/{id}", [PaymentController::class, "show"])->name("payments.show");
+        // Admin only — diproteksi di dalam controller
+        Route::put("/payments/{id}", [PaymentController::class, "update"])->name("payments.update");
+        Route::delete("/payments/{id}", [PaymentController::class, "destroy"])->name(
+            "payments.destroy",
+        );
+    });
+
+    // Paket WiFi — semua role bisa lihat, mutasi diproteksi di controller (Admin only)
+    Route::get("/wifi-packages", [WifiPackageController::class, "index"])->name(
+        "wifi-packages.index",
+    );
+    Route::middleware(["access:admin"])->group(function () {
+        Route::post("/wifi-packages", [WifiPackageController::class, "store"])->name(
+            "wifi-packages.store",
+        );
+        Route::put("/wifi-packages/{id}", [WifiPackageController::class, "update"])->name(
+            "wifi-packages.update",
+        );
+        Route::delete("/wifi-packages/{id}", [WifiPackageController::class, "destroy"])->name(
+            "wifi-packages.destroy",
+        );
+    });
+
+    // Presensi — Admin & Employee (internal: admin lihat semua, employee lihat sendiri)
+    Route::middleware(["access:admin,employee"])->group(function () {
+        Route::get("/attendance", [AttendanceController::class, "index"])->name("attendance.index");
+        // Admin only — diproteksi di dalam controller
+        Route::put("/attendance/{id}", [AttendanceController::class, "update"])->name(
+            "attendance.update",
+        );
+        // Employee only actions
+        Route::middleware(["access:employee"])->group(function () {
             Route::post("/attendance/clock-in", [AttendanceController::class, "clockIn"])->name(
                 "attendance.clockIn",
             );
@@ -86,34 +118,33 @@ Route::middleware(["access:admin,employee,customer"])->group(function () {
                 "attendance.history",
             );
         });
+    });
 
-    // Admin Exclusive Routes
-    Route::middleware(["access:admin"])
-        ->prefix("admin")
-        ->name("admin.")
-        ->group(function () {
-            Route::get(
-                "/dashboard",
-                fn() => Inertia::render("Welcome", ["title" => "Admin Dashboard"]),
-            )->name("dashboard");
-            Route::delete("/users/{id}", [UserController::class, "destroy"])->name("users.destroy");
-            Route::put("/users/{id}/reset-device", [UserController::class, "resetDevice"])->name(
-                "users.resetDevice",
-            );
+    // Lembur — Admin & Employee (internal: admin lihat semua, employee lihat sendiri)
+    Route::middleware(["access:admin,employee"])->group(function () {
+        Route::get("/overtimes", [OvertimeController::class, "index"])->name("overtimes.index");
+        Route::post("/overtimes", [OvertimeController::class, "store"])->name("overtimes.store");
+        Route::get("/overtimes/{id}", [OvertimeController::class, "show"])->name("overtimes.show");
+        Route::put("/overtimes/{id}", [OvertimeController::class, "update"])->name(
+            "overtimes.update",
+        );
+        Route::delete("/overtimes/{id}", [OvertimeController::class, "destroy"])->name(
+            "overtimes.destroy",
+        );
+    });
 
-            Route::resource("wifi-packages", WifiPackageController::class);
-            Route::delete("/subscriptions/{id}", [SubscriptionController::class, "destroy"])->name(
-                "subscriptions.destroy",
-            );
-            Route::delete("/payments/{id}", [PaymentController::class, "destroy"])->name(
-                "payments.destroy",
-            );
-
-            Route::get("/attendance", [AttendanceController::class, "adminIndex"])->name(
-                "attendance.index",
-            );
-            Route::put("/attendance/{id}", [AttendanceController::class, "update"])->name(
-                "attendance.update",
-            );
-        });
+    // Tunjangan / Bonus — Admin & Employee (internal: admin lihat semua, employee lihat sendiri)
+    Route::middleware(["access:admin,employee"])->group(function () {
+        Route::get("/allowances", [AllowanceController::class, "index"])->name("allowances.index");
+        Route::post("/allowances", [AllowanceController::class, "store"])->name("allowances.store");
+        Route::get("/allowances/{id}", [AllowanceController::class, "show"])->name(
+            "allowances.show",
+        );
+        Route::put("/allowances/{id}", [AllowanceController::class, "update"])->name(
+            "allowances.update",
+        );
+        Route::delete("/allowances/{id}", [AllowanceController::class, "destroy"])->name(
+            "allowances.destroy",
+        );
+    });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\SubscriptionService;
 use App\Services\WifiPackageService;
 use Illuminate\Http\JsonResponse;
@@ -19,10 +20,27 @@ class SubscriptionController extends Controller
     ) {}
 
     /**
-     * Menampilkan daftar semua langganan aktif pelanggan.
+     * Menampilkan halaman langganan sesuai role.
+     * Admin & Employee → daftar semua langganan pelanggan.
+     * Customer         → langganan milik sendiri.
      */
     public function index(Request $request): Response|JsonResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user?->hasRole("customer")) {
+            $subscription = $this->subscriptionService->getByCustomerId($user->id);
+
+            if ($request->wantsJson()) {
+                return response()->json($subscription);
+            }
+
+            return Inertia::render("Customer/Subscription", [
+                "subscription" => $subscription,
+            ]);
+        }
+
         $subscriptions = $this->subscriptionService->getAll();
 
         if ($request->wantsJson()) {
@@ -36,7 +54,7 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Menampilkan langganan milik satu pelanggan.
+     * Menampilkan langganan milik satu pelanggan berdasarkan ID — Admin & Employee.
      */
     public function show(int $customerId, Request $request): Response|JsonResponse
     {
@@ -46,13 +64,13 @@ class SubscriptionController extends Controller
             return response()->json($subscription);
         }
 
-        return Inertia::render("Customer/Subscription", [
+        return Inertia::render("Admin/Subscriptions/Show", [
             "subscription" => $subscription,
         ]);
     }
 
     /**
-     * Membuat atau memperbarui langganan paket pelanggan.
+     * Membuat atau memperbarui langganan paket pelanggan — Admin & Employee.
      */
     public function store(Request $request): JsonResponse|RedirectResponse
     {
@@ -80,10 +98,16 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Menghapus data langganan (Admin only).
+     * Menghapus data langganan — Admin only.
      */
     public function destroy(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat menghapus data langganan.");
+        }
+
         $this->subscriptionService->delete($id);
 
         if ($request->wantsJson()) {

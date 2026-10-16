@@ -17,19 +17,12 @@ class AuthController extends Controller
 
     /**
      * Menampilkan halaman login.
+     * Jika sudah login, redirect ke /dashboard (unified untuk semua role).
      */
     public function showLogin(): Response|RedirectResponse
     {
         if (Auth::check()) {
-            /** @var User|null $user */
-            $user = Auth::user();
-            if ($user?->hasRole("admin")) {
-                return redirect()->route("admin.dashboard");
-            }
-            if ($user?->hasRole("employee")) {
-                return redirect()->route("employee.attendance");
-            }
-            return redirect()->route("customer.subscription");
+            return redirect()->route("dashboard");
         }
 
         return Inertia::render("Auth/Login", [
@@ -39,6 +32,7 @@ class AuthController extends Controller
 
     /**
      * Memproses login multi-role.
+     * Semua role diarahkan ke /dashboard setelah login berhasil.
      */
     public function login(Request $request): JsonResponse|RedirectResponse
     {
@@ -64,18 +58,9 @@ class AuthController extends Controller
         }
 
         $user = $result["user"];
-        /** @var User|null $authenticatedUser */
-        $authenticatedUser = Auth::user();
-        if ($authenticatedUser?->hasRole("admin")) {
-            $redirectRoute = "admin.dashboard";
-        } elseif ($authenticatedUser?->hasRole("employee")) {
-            $redirectRoute = "employee.attendance";
-        } else {
-            $redirectRoute = "customer.subscription";
-        }
 
         return redirect()
-            ->intended(route($redirectRoute))
+            ->intended(route("dashboard"))
             ->with("success", "Selamat datang, {$user["name"]}!");
     }
 

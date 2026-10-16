@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\AttendanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,10 +16,34 @@ class AttendanceController extends Controller
     public function __construct(protected AttendanceService $attendanceService) {}
 
     /**
-     * Menampilkan dashboard presensi karyawan hari ini.
+     * Menampilkan halaman presensi.
+     * Admin  → melihat semua presensi karyawan (dengan filter tanggal/user_id).
+     * Employee → melihat presensi milik sendiri hari ini + riwayat.
      */
-    public function employeePage(Request $request): Response|JsonResponse
+    public function index(Request $request): Response|JsonResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user?->hasRole("admin")) {
+            $date = $request->query("date");
+            $userId = $request->query("user_id") ? (int) $request->query("user_id") : null;
+            $attendances = $this->attendanceService->getAllAttendance($date, $userId);
+
+            if ($request->wantsJson()) {
+                return response()->json($attendances);
+            }
+
+            return Inertia::render("Admin/Attendance/Index", [
+                "attendances" => $attendances,
+                "filters" => [
+                    "date" => $date,
+                    "user_id" => $userId,
+                ],
+            ]);
+        }
+
+        // Employee
         $userId = Auth::id();
         $today = $this->attendanceService->getTodayAttendance($userId);
         $history = $this->attendanceService->getAttendanceHistory(
@@ -63,7 +88,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Memproses Clock In (Absen Masuk).
+     * Memproses Clock In (Absen Masuk) — Employee only.
      */
     public function clockIn(Request $request): JsonResponse|RedirectResponse
     {
@@ -92,7 +117,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Memproses Clock Out (Absen Pulang).
+     * Memproses Clock Out (Absen Pulang) — Employee only.
      */
     public function clockOut(Request $request): JsonResponse|RedirectResponse
     {
@@ -118,7 +143,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Mengajukan Izin / Sakit.
+     * Mengajukan Izin / Sakit — Employee only.
      */
     public function izin(Request $request): JsonResponse|RedirectResponse
     {
@@ -142,32 +167,16 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Menampilkan seluruh presensi karyawan untuk Admin.
-     */
-    public function adminIndex(Request $request): Response|JsonResponse
-    {
-        $date = $request->query("date");
-        $userId = $request->query("user_id") ? (int) $request->query("user_id") : null;
-        $attendances = $this->attendanceService->getAllAttendance($date, $userId);
-
-        if ($request->wantsJson()) {
-            return response()->json($attendances);
-        }
-
-        return Inertia::render("Admin/Attendance/Index", [
-            "attendances" => $attendances,
-            "filters" => [
-                "date" => $date,
-                "user_id" => $userId,
-            ],
-        ]);
-    }
-
-    /**
-     * Mengubah data status presensi secara manual oleh Admin.
+     * Mengubah data status presensi secara manual — Admin only.
      */
     public function update(int $id, Request $request): JsonResponse|RedirectResponse
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!$user?->hasRole("admin")) {
+            abort(403, "Hanya Admin yang dapat mengubah data presensi.");
+        }
+
         $validated = $request->validate([
             "status" => ["nullable", "string", "in:proses,hadir,izin,sakit,alpa,libur"],
             "grade" => ["nullable", "string"],
